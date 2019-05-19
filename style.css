@@ -1,0 +1,26 @@
+body{
+  text-align: center;
+}
+
+h1{
+  font-family: times; 
+  font-size: 28px;
+  margin-bottom: -5px;
+}
+
+#tooltip {	
+  position: absolute;			
+  min-width: 100px;					
+  padding: 5px;				
+  font-size: 13px;
+  font-family: calibri;
+  color: white;
+  font-weight: bold;
+  background: black;	
+  border-radius: 5px;		
+  text-align: center;
+}
+
+.cell:hover{
+  stroke: black;
+}
