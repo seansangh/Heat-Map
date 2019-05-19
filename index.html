@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="https://cdn.freecodecamp.org/testable-projects-fcc/v1/bundle.js"></script>
+  <link rel="stylesheet" href="/style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/5.7.0/d3.min.js"></script>
+  <script>
+  document.addEventListener('DOMContentLoaded', function(){
+  
+  req= new XMLHttpRequest();
+  req.open("GET","https://raw.githubusercontent.com/freeCodeCamp/ProjectReferenceData/master/global-temperature.json",true);
+  req.send();
+  req.onload= function(){
+  json= JSON.parse(req.responseText);
+  
+    json["monthlyVariance"].forEach(
+    function(par){
+      var color="";
+      var dataMonth= par["month"];
+      var base= json["baseTemperature"];
+      var dataTemp= base+ par["variance"];
+   
+ 
+      
+     if(base+ par["variance"]>=12.8){color="#8b1e06";} 
+     if(base+ par["variance"]>=11.7 && base+ par["variance"]<12.8){color="red";}
+     if(base+ par["variance"]>=10.6 && base+ par["variance"]<11.7){color="#DA541D";}
+     if(base+ par["variance"]>=9.5 && base+ par["variance"]<10.6){color="#F69c40";}   
+     if(base+ par["variance"]>=8.3 && base+ par["variance"]<9.5){color="#F4C732";}  
+     if(base+ par["variance"]>=7.2 && base+ par["variance"]<8.3){color="#F9EE5D";}  
+     if(base+ par["variance"]>=6.1 && base+ par["variance"]<7.2){color="#A8EEF9";}  
+     if(base+ par["variance"]>=5.0 && base+ par["variance"]<6.1){color="#79E4F5";}      
+     if(base+ par["variance"]>=3.9 && base+ par["variance"]<5.0){color="#4BCEE3";}    
+     if(base+ par["variance"]>=2.8 && base+ par["variance"]<3.9){color="#1DADC4";}        
+     if(base+ par["variance"]<2.8){color="#04869B";}       
+      par["color"]=color;
+      par["dataTemp"]=dataTemp;
+      
+      switch(dataMonth){
+        case 1:
+          par["dataMonth"]="January"
+        break;
+        case 2:
+          par["dataMonth"]="February"
+        break; 
+        case 3:
+          par["dataMonth"]="March"
+        break; 
+        case 4:
+          par["dataMonth"]="April"
+        break; 
+        case 5:
+          par["dataMonth"]="May"
+        break; 
+        case 6:
+          par["dataMonth"]="June"
+        break; 
+        case 7:
+          par["dataMonth"]="July"
+        break; 
+        case 8:
+          par["dataMonth"]="August"
+        break; 
+        case 9:
+          par["dataMonth"]="September"
+        break; 
+        case 10:
+          par["dataMonth"]="October"
+        break;           
+        case 11:
+          par["dataMonth"]="November"
+        break;           
+        case 12:
+          par["dataMonth"]="December"
+        break;           
+          
+      }
+      
+      
+      
+    }
+    )
+ 
+var h= 450;
+var w= 1350;    
+    
+const xScale= d3.scaleLinear()
+                .domain([1753,2015])
+                .range([100,w-30]);
+    
+const yScale= d3.scaleLinear()
+                .domain([0,11])
+                .range([50,h-100]);
+
+const toolTip = d3.select('body')
+                  .append('div')
+                  .attr("id","tooltip")
+                  .style("opacity",0);
+    
+const svg = d3.select('body')    
+              .append('svg')
+              .attr("height",h)
+              .attr("width",w);
+     
+      svg.selectAll('rect')
+         .data(json['monthlyVariance'])
+         .enter()
+         .append('rect')
+         .attr("x",(f,i)=>xScale(f["year"]))
+         .attr("y",(f,i)=>yScale(f["month"]-1))
+         .attr("width",5)
+         .attr("height",27)
+         .attr("fill",(f,i)=>f["color"])
+         .attr("class","cell")
+         .attr("data-month",(f,i)=>f["month"]-1)
+         .attr("data-year",(f)=>f["year"])
+         .attr("data-temp",(f,i)=>f["dataTemp"])
+         .on("mouseover", function(par){
+            toolTip.transition()
+                   .duration(200)
+                   .style("opacity", 0.7);
+            toolTip.attr('data-year',d3.select(this).attr('data-year')); 
+            toolTip.html(par.dataMonth + " - " + par.year + "<br />" + par.dataTemp.toFixed(1) +"&degC" +"<br />" + par.variance.toFixed(1)+"&degC")
+                   .style("left",d3.event.pageX + 10 + "px")
+                   .style("top",d3.event.pageY + 10 +"px");
+         })           
+         .on("mouseout", function(par){
+            toolTip.transition()
+                   .style("opacity",0)
+         });
+    
+    const xAxis= d3.axisBottom(xScale).tickFormat(d3.format(".0f"));
+    const yAxisFormat = function(par) {
+      const month = d3.timeParse('%m')(par + 1);
+      return d3.timeFormat('%B')(month);
+    }
+    let yAxis = d3.axisLeft(yScale).tickFormat(yAxisFormat);
+    
+    var colorArray=["#8b1e06","red","#DA541D","#F69c40","#F4C732","#F9EE5D","#A8EEF9", "#79E4F5","#4BCEE3", "#1DADC4", "#04869B"]; colorArray= colorArray.reverse();
+    var textArray=["2.8","3.9","5.0","6.1","7.2","8.3","9.5","10.6","11.7", "12.8"];
+    
+const legend = svg.selectAll('.legend')
+                  .data(colorArray)
+                  .enter()
+                  .append('g')
+                  .attr('id','legend')
+                  .attr("transform", "translate(100,350)");  
+          
+    legend.append('rect')
+          .attr('width', 30)                         
+          .attr('height', 25)
+          .attr("x", (f,i)=>i*30)
+          .attr("y", 55)
+          .style('fill', (f)=>f)
+          .style('stroke', "black");
+
+const legend2 = svg.selectAll('.legend')
+                  .data(textArray)
+                  .enter()
+                  .append('g')
+                  .attr('id','legend')
+                  .attr("transform", "translate(100,350)");  
+    
+    legend2.append('text')
+          .attr("x", (f,i)=>i*30+28)
+          .attr("y", 84)
+          .attr("id", "lines")
+          .text("|");  
+    
+    legend2.append('text')
+          .attr("x", (f,i)=>(i*30)+20)
+          .attr("y", 100)
+          .style("font-size",16)
+          .text((f,i)=>f);   
+    
+    svg.append("g")
+       .attr("transform","translate(" + 0 + "," + 377 + ")")
+       .attr("id","x-axis")
+       .call(xAxis);
+    
+    svg.append("g")
+       .attr("transform","translate(" + 98 + "," + 15 + ")")
+       .attr("id","y-axis")
+       .call(yAxis);   
+    
+    
+    
+    
+  }
+  
+})
+  </script>  
+</head>
+<body>
+<h1 id="title">Monthly Global Land Surface Temperature</h1>
+  <h2 id="description">1753 - 2015: base temperature 8.66℃
+</h2>
+  
+</body>
+</html>
